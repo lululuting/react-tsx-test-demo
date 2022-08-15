@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Pagination } from 'antd';
 
 /**定义函数组件父传子 属性值类型。问号：该属性可有可无
 接口的声明不要放在import语句的前面，可能会报错**/
@@ -32,16 +33,18 @@ type ReactNode =
   | undefined;
 
 interface PropsFC {
-  mode?: 'paging' | 'infinite'; // 枚举
+  mode?: 'routine' | 'infinite'; // 枚举
   page?: number;
   limit?: number;
   loadMore?: boolean;
   children?: any;
+  paginationProps?: any;
   // 方法 ------------
   queryPromise?: string | (() => any);
   noDataFn?: (res?: any[], list?: any[]) => boolean;
   noDataTips?: () => string | (() => any);
   noMoreDataTips?: ReactNode;
+  renderList?: (list: ItemType[]) => ReactElement;
   renderItem?: (item?: {}, index?: number, list?: any[]) => any;
 }
 
@@ -49,6 +52,11 @@ interface ItemType {
   key: number | string;
   value: string;
 }
+
+type QueryListParam = {
+  curPage?: number;
+  curLimit?: number;
+};
 
 // FC:function component 函数组件
 const Demo: React.FC<PropsFC> = (props) => {
@@ -65,7 +73,6 @@ const Demo: React.FC<PropsFC> = (props) => {
 
   const getListData = async () => {
     setPage(page + 1);
-
     let data = await getListDataPromise();
     setList([...list, ...data]);
     if (!data.length) {
@@ -73,7 +80,7 @@ const Demo: React.FC<PropsFC> = (props) => {
     }
   };
 
-  const getListDataPromise = async () => {
+  const getListDataPromise = (queryListParam?: QueryListParam) => {
     setLoading(true);
     let api: string = '默认的api地址';
 
@@ -88,19 +95,23 @@ const Demo: React.FC<PropsFC> = (props) => {
     }
 
     // 如果没有传入queryPromise 走默认
-
+    console.log(
+      queryListParam?.curPage || page,
+      queryListParam?.curLimit || limit
+    );
     let data: Array<ItemType> = [];
-    for (let i = 0; i < limit; i++) {
+    for (let i = 0; i < (queryListParam?.curLimit || limit); i++) {
       data.push({
-        key: page + '_' + i + 'key',
-        value: page + '_' + i + 'value',
+        key: (queryListParam?.curPage || page) + '_' + i + 'key',
+        value: (queryListParam?.curPage || page) + '_' + i + 'value',
       });
     }
+    console.log(data);
 
     return new Promise((req, rej) => {
       console.log('api：' + api);
       setTimeout(() => {
-        if (props.noDataFn ? props.noDataFn(data, list) : list.length >= 20) {
+        if (props.noDataFn ? props.noDataFn(data, list): false) {
           req([]);
         } else {
           req(data);
@@ -119,10 +130,23 @@ const Demo: React.FC<PropsFC> = (props) => {
     }
   };
 
+  const paginationChange = async (page, limit) => {
+    // console.log(page, limit);
+    setPage(page);
+    setLimit(limit);
+    let data = await getListDataPromise({
+      curPage: page,
+      curLimit: limit,
+    });
+    setList(data);
+  };
+
   return (
     <div>
       <div style={{ position: 'relative' }}>
-        {list.length
+        {props.renderList
+          ? props.renderList(list)
+          : list.length
           ? list.map((item, index) => {
               // 自定义renderItem
               if (props.renderItem) {
@@ -147,22 +171,23 @@ const Demo: React.FC<PropsFC> = (props) => {
             loading
           </div>
         ) : null}
-
-        {/* 常规分页 */}
-
-        {/* {
-          
-        } */}
       </div>
-      {props.loadMore ? (
-        !isNoMoreData ? (
-          <button onClick={getListData} disabled={loading}>
-            加载更多
-          </button>
-        ) : (
-          renderNoMoreData()
-        )
-      ) : null}
+      {/* 分页 */}
+      {props.mode === 'routine' ? (
+        <Pagination
+          total={20}
+          size="small"
+          defaultCurrent={1}
+          onChange={paginationChange}
+          {...props.paginationProps}
+        />
+      ) : !isNoMoreData ? (
+        <button onClick={getListData} disabled={loading}>
+          加载更多
+        </button>
+      ) : (
+        renderNoMoreData()
+      )}
     </div>
   );
 };
@@ -170,6 +195,7 @@ const Demo: React.FC<PropsFC> = (props) => {
 //定义props的默认值
 Demo.defaultProps = {
   loadMore: true,
+  mode: 'routine',
 };
 export default Demo;
 

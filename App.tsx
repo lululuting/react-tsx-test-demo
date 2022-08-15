@@ -1,17 +1,40 @@
 import * as React from 'react';
+import { Divider, List, Typography } from 'antd';
+import 'antd/dist/antd.css';
 import Demo, { Ulist } from './demo';
 import './style.css';
+
+interface ItemType {
+  key: number | string;
+  value: string;
+}
 
 const App: React.FC = () => {
   const renderNoMoreDataTips = () => {
     return <div style={{ color: 'blue' }}>就是没有了</div>;
   };
-  const renderItem = (item) => {
+
+  const renderList = (data: ItemType[]) => {
     return (
-      <div style={{ borderBottom: '1px solid #333', padding: 10 }}>
-        <span style={{ color: 'block' }}>{item.key}</span>
-        ---
-        <span style={{ color: 'red' }}>{item.value}</span>;
+      <List
+        itemLayout="horizontal"
+        dataSource={data}
+        renderItem={(item) => (
+          <List.Item>
+            <List.Item.Meta
+              title={<a href="https://ant.design">{item.key}</a>}
+              description={item.value}
+            />
+          </List.Item>
+        )}
+      />
+    );
+  };
+
+  const renderItem = (item: ItemType) => {
+    return (
+      <div>
+        <List.Item>{item.value}</List.Item>
       </div>
     );
   };
@@ -23,10 +46,14 @@ const App: React.FC = () => {
 
       <Demo
         noMoreDataTips={renderNoMoreDataTips}
+        // renderList={renderList}
         renderItem={renderItem}
-        mode={'paging'}
+        mode="routine"
         limit={9}
-        // noDataFn={(res) => res.length >= 20}
+        paginationProps={{
+          showSizeChanger: true,
+          showQuickJumper: true,
+        }}
       />
     </div>
   );
