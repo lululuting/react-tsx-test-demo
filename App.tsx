@@ -47,10 +47,22 @@ const App: React.FC = () => {
       <Demo
         noMoreDataTips={renderNoMoreDataTips}
         // renderList={renderList}
+        // queryPromise={() =>
+        //   new Promise((res, rej) => {
+        //     res([
+        //       {
+        //         tit: 1,
+        //         key: 1,
+        //         value: 2,
+        //       },
+        //     ]);
+        //   })
+        // }
         renderItem={renderItem}
         mode="routine"
-        limit={9}
+        limit={10}
         paginationProps={{
+          defaultPageSize: 10,
           showSizeChanger: true,
           showQuickJumper: true,
         }}

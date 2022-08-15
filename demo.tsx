@@ -106,12 +106,11 @@ const Demo: React.FC<PropsFC> = (props) => {
         value: (queryListParam?.curPage || page) + '_' + i + 'value',
       });
     }
-    console.log(data);
 
     return new Promise((req, rej) => {
       console.log('api：' + api);
       setTimeout(() => {
-        if (props.noDataFn ? props.noDataFn(data, list): false) {
+        if (props.noDataFn ? props.noDataFn(data, list) : false) {
           req([]);
         } else {
           req(data);
